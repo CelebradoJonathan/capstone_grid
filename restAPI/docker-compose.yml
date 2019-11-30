@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  src
+    build: .
+    ports:
+     - 5000:8080
+    volumes:
+     - ./usr/src/app
