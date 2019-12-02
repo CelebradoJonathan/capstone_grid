@@ -1,5 +1,5 @@
 from marshmallow import fields, Schema
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import or_
 import datetime
 import enum
 from . import db
@@ -13,8 +13,7 @@ class FileModel(db.Model):
     __tablename__ = 'files'
 
     id = db.Column(db.Integer, primary_key=True)
-    # file_id = db.Column(UUID(as_uuid=True), db.ForeignKey('fileid.file_id'), nullable=False)
-    size = db.Column(db.String(128), nullable=False)
+    size = db.Column(db.Integer)
     filename = db.Column(db.String(128))
     sha1 = db.Column(db.String(128))
     md5 = db.Column(db.String(128))
@@ -52,11 +51,11 @@ class FileModel(db.Model):
 
     @staticmethod
     def get_one_file(hash_value):
-        return FileModel.query.filter(FileModel.sha1 == hash_value or FileModel.md5 == hash_value).all()
+        return FileModel.query.filter(or_(FileModel.sha1 == hash_value, FileModel.md5 == hash_value)).all()
 
-    # @staticmethod
-    # def get_one_file_only(id, file_id):
-    #     return FileModel.query.filter(FileModel.id == id or FileModel.file_id == file_id).first()
+    @staticmethod
+    def get_one_file_only(hash_value):
+        return FileModel.query.filter(or_(FileModel.sha1 == hash_value, FileModel.md5 == hash_value)).first()
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
@@ -68,7 +67,7 @@ class FileSchema(Schema):
   """
 
     id = fields.Int(dump_only=True)
-    size = fields.Str(required=True)
+    size = fields.Int(required=True)
     filename = fields.Str(required=True)
     sha1 = fields.Str(required=True)
     md5 = fields.Str(required=True)

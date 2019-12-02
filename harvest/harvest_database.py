@@ -8,7 +8,7 @@ def create_db(user, password, host, dbname):
         connection = psycopg2.connect(user=user,
                                       password=password,
                                       host=host,
-                                      port="54320",
+                                      port="54321",
                                       database="postgres")
         connection.autocommit = True
         connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -31,7 +31,6 @@ def create_db(user, password, host, dbname):
         if (connection):
             cursor.close()
             connection.close()
-            print("PostgreSQL connection is closed")
 
 
 def establish_connection(user, password, host, dbname):
@@ -39,7 +38,7 @@ def establish_connection(user, password, host, dbname):
     connection = psycopg2.connect(user=user,
                                   password=password,
                                   host=host,
-                                  port="54320",
+                                  port="54321",
                                   database=dbname)
     return connection
 
@@ -65,7 +64,6 @@ def create_table_details(user, password, host, dbname):
         if (connection):
             cursor.close()
             connection.close()
-            # print("PostgreSQL connection is closed")
 
 
 def create_table_links(user, password, host, dbname):
@@ -89,7 +87,6 @@ def create_table_links(user, password, host, dbname):
         if (connection):
             cursor.close()
             connection.close()
-            # print("PostgreSQL connection is closed")
 
 
 def create_table_translations(user, password, host, dbname):
@@ -114,7 +111,6 @@ def create_table_translations(user, password, host, dbname):
         if (connection):
             cursor.close()
             connection.close()
-            # print("PostgreSQL connection is closed")
 
 
 #  CREATE
@@ -130,7 +126,6 @@ def insert_links(user, password, host, dbname, link):
         insert_query = "INSERT INTO downloadlinks (Link)" \
                        " VALUES(%s)"
         cursor.execute(insert_query, (link,))
-        print(link)
         connection.commit()
     except (Exception, psycopg2.Error) as error:
         # logger.error('Error while connecting to PostgreSQL: ' + str(error), exc_info=True)
@@ -140,7 +135,6 @@ def insert_links(user, password, host, dbname, link):
         if (connection):
             cursor.close()
             connection.close()
-            # logger.info("PostgreSQL connection is closed")
 
 
 def insert_details(user, password, host, dbname, dl_dict):
@@ -164,7 +158,6 @@ def insert_details(user, password, host, dbname, dl_dict):
         if (connection):
             cursor.close()
             connection.close()
-            # logger.info("PostgreSQL connection is closed")
 
 
 def insert_translations(user, password, host, dbname, translation_dict):
@@ -188,7 +181,6 @@ def insert_translations(user, password, host, dbname, translation_dict):
         if (connection):
             cursor.close()
             connection.close()
-            # logger.info("PostgreSQL connection is closed")
 
 
 #  READ
@@ -207,10 +199,30 @@ def select_links(user, password, host, dbname, link):  # check if the link is al
             return False
     except (Exception, psycopg2.Error) as error:
         print(error)
-    # finally:
-    #     if (connection):
-    #         cursor.close()
-    #         connection.close()
+    finally:
+        # closing database connection.
+        if (connection):
+            cursor.close()
+            connection.close()
+
+
+def select_all_links(user, password, host, dbname):
+    try:
+        create_table_links(user, password, host, dbname)
+        connection = establish_connection(user, password, host, dbname)
+        cursor = connection.cursor()
+
+        search_query = "SELECT * FROM downloadlinks"
+        cursor.execute(search_query)
+        links_list = [r[1] for r in cursor.fetchall()]
+        return links_list
+    except (Exception, psycopg2.Error) as error:
+        print(error)
+    finally:
+        # closing database connection.
+        if (connection):
+            cursor.close()
+            connection.close()
 
 
 def select_details(user, password, host, dbname, detail_dict):
@@ -230,6 +242,7 @@ def select_details(user, password, host, dbname, detail_dict):
     except (Exception, psycopg2.Error) as error:
         print(error)
     finally:
+        # closing database connection.
         if (connection):
             cursor.close()
             connection.close()
@@ -253,6 +266,7 @@ def select_translations(user, password, host, dbname, translation_dict):
     except (Exception, psycopg2.Error) as error:
         print(error)
     finally:
+        # closing database connection.
         if (connection):
             cursor.close()
             connection.close()
