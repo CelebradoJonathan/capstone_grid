@@ -5,7 +5,7 @@ import configparser
 import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import harvest_database as db
+from . import harvest_database as db
 import logging.config
 import yaml
 
