@@ -6,6 +6,8 @@ import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import harvest_database as db
+import logging.config
+import yaml
 
 config = configparser.ConfigParser()
 conf_dir = os.path.join(os.path.dirname(__file__), 'conf.ini')
@@ -14,7 +16,28 @@ password = config['args']['password']
 hostname = config['args']['hostname']
 username = config['args']['username']
 dbname = config['args']['dbname_harvest']
+port = config['args']['port']
 base_url = config['args']['base_url']
+
+
+def setup_logging(
+        default_path='logging.yaml',
+        default_level=logging.INFO,
+        env_key='LOG_CFG'
+):
+    """Setup logging configuration from a yaml file.
+    """
+    path = default_path
+    value = os.getenv(env_key, None)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            logging_config = yaml.safe_load(f.read())
+        logging.config.dictConfig(logging_config)
+
+    else:
+        logging.basicConfig(level=default_level)
 
 
 def parse_link(link):
@@ -29,6 +52,7 @@ def download_file(url, filename):
                                   os.sep, "downloads", os.sep, filename), "wb") as file:
         response = get(url)
         file.write(response.content)
+        logger.info("Downloaded {}".format(filename))
 
 
 def get_all_downloadable(download_page_link):
@@ -47,8 +71,9 @@ def get_all_downloadable(download_page_link):
 
 def check_version(download_page_link):
     name_version = get_details(download_page_link)
-    if db.select_details(username, password, hostname, dbname, name_version):
-        db.insert_details(username, password, hostname, dbname, name_version)
+    if db.select_details(username, password, hostname, dbname, port, name_version):
+        db.insert_details(username, password, hostname, dbname, port, name_version)
+        logger.info("Inserted app {} with version {} to db".format(name_version["name"], name_version["version"]))
         get_all_downloadable(download_page_link)
         return True
     else:
@@ -67,11 +92,12 @@ def get_details(download_page_link):
 
 
 def check_translations(translations):
-    if db.select_translations(username, password, hostname, dbname, translations):
+    if db.select_translations(username, password, hostname, dbname, port, translations):
         download_link = translations['language']
         version = translations['version']
         download_file(download_link, version + download_link.rsplit("/", 1)[-1])
-        db.insert_translations(username, password, hostname, dbname, translations)
+        db.insert_translations(username, password, hostname, dbname, port, translations)
+        logger.info("Inserted {} to db".format(translations))
 
 
 def get_translations(download_page_link):
@@ -98,23 +124,24 @@ def get_links():
     index_links = unordered_list.find_all("a", href=True)
     for link in index_links:
         href = link.get("href")
-        if "http" not in href and db.select_links(username, password, hostname, dbname, href):
-            db.insert_links(username, password, hostname, dbname, href)  # checker of link duplicates
-
-    return db.select_all_links(username, password, hostname, dbname)
+        if "http" not in href and db.select_links(username, password, hostname, dbname, port, href):
+            db.insert_links(username, password, hostname, dbname, port, href)  # checker of link duplicates
+            logger.info("Inserted {} to db".format(href))
+    return db.select_all_links(username, password, hostname, dbname, port)
 
 
 def upload_to_api(url, filename):
     file = {'file': open(filename, 'rb')}
     response = requests.post(url, files=file)
+    logger.info("Uploaded {} to {}".format(filename, url))
 
 
-def listdir_fullpath(d):
-    return [os.path.join(d, f) for f in os.listdir(d)]
+def listdir_fullpath(directory):
+    return [os.path.join(directory, file) for file in os.listdir(directory)]
 
 
 def get_downloaded_files():
-    url = "http://127.0.0.1:5000/filelog/"
+    url = "http://apicon:8000/filelog/"
     path = "./downloads"
     files = listdir_fullpath(path)
     for file in files:
@@ -129,9 +156,10 @@ def main():
         get_translations(download_page_link)
 
     get_downloaded_files()
-    # print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    # print(os.path.abspath(os.path.dirname(__file__)))
 
 
 if __name__ == '__main__':
+    setup_logging()
+    logger = logging.getLogger(__name__)
     main()
+

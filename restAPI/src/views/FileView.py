@@ -1,12 +1,10 @@
 from flask import request, json, Response, Blueprint
-from sqlalchemy import or_
+from ..models.FileModel import FileModel, FileSchema
 import os
 import hashlib
-from ..models.FileModel import FileModel, FileSchema
 
 
 file_api = Blueprint('files', __name__)
-
 file_schema = FileSchema()
 
 
@@ -30,10 +28,6 @@ def create():
     req_data = request.files["file"]
     binary = req_data.read()
     filename = req_data.filename
-    # print(str(req_data.filename))
-    # print(type(req_data.tell()))
-    # print(str(get_md5(binary)))
-    # print(str(get_sha1(binary)))
 
     insert_data = {"filename": filename,
                    "size": req_data.tell(),
@@ -59,22 +53,19 @@ def create():
 def download_file(binary, filename):
     with open("{}{}{}{}{}".format(os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__name__)))),
                                   os.sep, "downloads", os.sep, filename), "wb") as file:
-        # response = get(url)
         file.write(binary)
 
 
 def get_md5(binary):
-    buf = binary
     md5_hasher = hashlib.md5()
-    md5_hasher.update(buf)
+    md5_hasher.update(binary)
 
     return md5_hasher.hexdigest()
 
 
 def get_sha1(binary):
-    buf = binary
     sha1_hasher = hashlib.sha1()
-    sha1_hasher.update(buf)
+    sha1_hasher.update(binary)
 
     return sha1_hasher.hexdigest()
 
@@ -124,28 +115,6 @@ def update(hash_value):
 
     file_message = file_schema.dump(file)
     return custom_response(file_message, 200)
-    # return "stuff"
-
-
-@file_api.route('/<string:file_id>', methods=['PUT'])
-def update_all(file_id):
-    """
-    Update a file based on id anf file_id
-    """
-    req_data = request.get_json()
-    file = FileModel.get_one_file(file_id)
-    if not file:
-        return custom_response({'error': 'file not found'}, 404)
-
-    data, error = file_schema.load(req_data, partial=True)
-    if error:
-        return custom_response(error, 400)
-
-    for afile in file:
-        afile.update(data)
-        file_message = file_schema.dump(afile)
-
-    return custom_response(file_message, 200)
 
 
 @file_api.route('/<string:hash_value>', methods=['DELETE'])
@@ -160,8 +129,6 @@ def delete(hash_value):
         return custom_response({'error': 'file not found'}, 404)
     delete_file(data["filename"])
     file.delete()
-    # print(FileModel.query.filter(FileModel.sha1 == hash_value))
-
     return custom_response({'message': 'deleted'}, 204)
 
 
