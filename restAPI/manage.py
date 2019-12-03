@@ -6,7 +6,6 @@ from app import create_app, db
 from src.models import FileModel
 
 
-# env_name = "development"
 env_name = os.getenv('FLASK_ENV')
 
 app = create_app(env_name)

@@ -81,7 +81,7 @@ def check_version(download_page_link):
 
 def get_details(download_page_link):
     soup = parse_link(download_page_link)
-    version_regex = "v[0-9]*\.[0-9]*"
+    version_regex = r"v[0-9]*\.[0-9]*"
     details = soup.find(text=re.compile(version_regex))
     name_version = details.split("-")[0]
     index = re.search(version_regex, name_version)
@@ -134,6 +134,7 @@ def upload_to_api(url, filename):
     file = {'file': open(filename, 'rb')}
     response = requests.post(url, files=file)
     logger.info("Uploaded {} to {}".format(filename, url))
+    return response.status_code
 
 
 def listdir_fullpath(directory):

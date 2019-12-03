@@ -11,6 +11,8 @@ beautifulsoup4 = "*"
 lxml = "*"
 psycopg2 = "*"
 pyyaml = "*"
+pytest = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.7"

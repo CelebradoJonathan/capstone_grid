@@ -4,8 +4,6 @@ import os
 from src.config import app_config
 from src.models import db
 from src.views.FileView import file_api as file_blueprint
-# from src.views.fileIdView import fileid_api as fileid_blueprint
-# env_name = "development"
 env_name = os.getenv('FLASK_ENV')
 
 
