@@ -41,8 +41,7 @@ def setup_logging(
 
 
 def parse_link(link):
-    url = link
-    resource = requests.get(url)
+    resource = requests.get(link)
     soup = BeautifulSoup(resource.text, 'lxml')
     return soup
 
@@ -101,7 +100,8 @@ def check_translations(translations):
 
 
 def get_translations(download_page_link):
-    different_links = ["http://54.174.36.110/utils/internet_explorer_cookies_view.html"]
+    different_links = ["http://54.174.36.110/utils/"
+                       "internet_explorer_cookies_view.html"]
     if download_page_link not in different_links:
         soup = parse_link(download_page_link)
         identifier = soup.find_all("tr", class_="utiltableheader")[-1]
